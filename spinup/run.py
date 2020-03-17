@@ -8,11 +8,12 @@ import json
 import os, subprocess, sys
 import os.path as osp
 import string
-import tensorflow as tf
+# import tensorflow as tf
 import torch
 from copy import deepcopy
 from textwrap import dedent
 
+import pybulletgym
 
 # Command line args that will go to ExperimentGrid.run, and must possess unique
 # values (therefore must be treated separately).
@@ -30,6 +31,7 @@ MPI_COMPATIBLE_ALGOS = ['vpg', 'trpo', 'ppo']
 
 # Algo names (used in a few places)
 BASE_ALGO_NAMES = ['vpg', 'trpo', 'ppo', 'ddpg', 'td3', 'sac']
+BASE_ALGO_NAMES += ['vpg_pen', 'trpo_pen', 'ppo_pen', 'ddpg_pen', 'td3_pen', 'sac_pen']
 
 
 def add_with_backends(algo_list):

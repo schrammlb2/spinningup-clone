@@ -3,6 +3,7 @@ from spinup.user_config import DEFAULT_DATA_DIR, FORCE_DATESTAMP, \
 from spinup.utils.logx import colorize
 from spinup.utils.mpi_tools import mpi_fork, msg
 from spinup.utils.serialization_utils import convert_json
+from spinup.utils.randomize_xml import randomize_xml
 import base64
 from copy import deepcopy
 import cloudpickle
@@ -19,6 +20,8 @@ from textwrap import dedent
 import time
 from tqdm import trange
 import zlib
+
+import pybulletgym
 
 DIV_LINE_WIDTH = 80
 
@@ -151,8 +154,21 @@ def call_experiment(exp_name, thunk, seed=0, num_cpu=1, data_dir=None,
         # Make 'env_fn' from 'env_name'
         if 'env_name' in kwargs:
             import gym
+            import os
             env_name = kwargs['env_name']
-            kwargs['env_fn'] = lambda : gym.make(env_name)
+            def env_fn(transfer=False):
+                if not transfer: 
+                    return gym.make(env_name)
+                else:
+                    path = os.getcwd() +"/mod_envs/" + env_name + "/"
+                    filenames = [path + xml for xml in os.listdir(path) if xml.endswith('.xml')]
+                    fn = sorted(filenames, key = lambda x: len(x))
+                    randomize_xml(fn[0])
+                    filenames = [path + xml for xml in os.listdir(path) if xml.endswith('.xml')]
+                    xml_file = sorted(filenames, key = lambda x: len(x))[-1]
+                    return gym.make(env_name, xml_file=xml_file)
+
+            kwargs['env_fn'] = env_fn   #lambda : gym.make(env_name)
             del kwargs['env_name']
 
         # Fork into multiple processes

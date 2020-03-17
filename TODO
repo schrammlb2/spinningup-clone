@@ -1,0 +1,51 @@
+Conversion for spinningup
+	Support for different test functions
+		Idea 1 -- add as different environments
+		Idea 2 -- add them as a different parameter and modify the plotting function
+		Idea 3 -- add them as a different algorithm
+
+	GPU support
+		I think there's no way around this, you just gotta put device=DEVICE in everything
+
+	X Implement transfer testing
+		Implement varied environments
+		Figure out why it works on spinningup-basic, but not on the ordinary spinning up
+
+CUDA = torch.cuda.is_available()
+if CUDA:  
+	gpu_count = torch.cuda.device_count()
+	import random
+	DEVICE = torch.device(random.randint(gpu_count)) #Randomly assign to one of the GPUs
+else:
+	DEVICE = torch.cpu()
+
+
+-----------------------------------------------------------------------------------------------------------
+
+Improve numerical stability of log_prob
+	Move change that you implemented on Mujoco side over to pybullet side
+
+-----------------------------------------------------------------------------------------------------------
+#use to pass to env_fn argument
+
+
+def env_fn(xml_file=None):
+  if xml_file==None: 
+    return gym.make(env_name)
+  else:
+    return gym.make(env_name, xml_file=xml_file)		
+
+class EnvHolder
+	def __init__(self, name, base_xml):
+		self.name=name
+		self.base_xml=base_xml
+
+	def make_env(self):
+		return gym.make(self.name)
+	
+	def make_test_env(self)
+		randomize_xml(self.base_xml)
+		xml_name = base_xml[:-4] + "_rand.xml"
+		return gym.make(self.name, xml_file=xml_name)
+
+

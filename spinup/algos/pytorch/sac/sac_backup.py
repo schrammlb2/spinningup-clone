@@ -17,7 +17,7 @@ if CUDA:
     DEVICE = torch.device(random.randint(gpu_count)) #Randomly assign to one of the GPUs
 else:
     DEVICE = torch.device('cpu')
-# , device=DEVICE
+, device=DEVICE
 
 
 class ReplayBuffer:
