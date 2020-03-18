@@ -7,6 +7,7 @@ import gym
 import time
 import spinup.algos.pytorch.sac.core as core
 from spinup.utils.logx import EpochLogger
+from spinup.utils.gradient_penalty import *
 
 import pybulletgym
 
@@ -57,7 +58,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
         update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000, 
-        logger_kwargs=dict(), save_freq=1):
+        logger_kwargs=dict(), save_freq=1, use_grad_penalty=True, epsilon=.025):
     """
     Soft Actor-Critic (SAC)
 
@@ -194,15 +195,25 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q2 = ac.q2(o,a)
 
         # Bellman backup for Q functions
-        with torch.no_grad():
-            # Target actions come from *current* policy
+        if use_grad_penalty:
             a2, logp_a2 = ac.pi(o2)
 
-            # Target Q-values
-            q1_pi_targ = ac_targ.q1(o2, a2)
-            q2_pi_targ = ac_targ.q2(o2, a2)
+            q1_pi_targ = gradient_penalty(ac_targ.q1, o2, a2, epsilon=epsilon)
+            q2_pi_targ = gradient_penalty(ac_targ.q2, o2, a2, epsilon=epsilon)
+
             q_pi_targ = torch.min(q1_pi_targ, q2_pi_targ)
             backup = r + gamma * (1 - d) * (q_pi_targ - alpha * logp_a2)
+        else:
+            with torch.no_grad():
+                # Target actions come from *current* policy
+                a2, logp_a2 = ac.pi(o2)
+
+                # Target Q-values
+                q1_pi_targ = ac_targ.q1(o2, a2)
+                q2_pi_targ = ac_targ.q2(o2, a2)
+
+                q_pi_targ = torch.min(q1_pi_targ, q2_pi_targ)
+                backup = r + gamma * (1 - d) * (q_pi_targ - alpha * logp_a2)
 
         # MSE loss against Bellman backup
         loss_q1 = ((q1 - backup)**2).mean()
@@ -316,6 +327,31 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 ep_len += 1
             worst_case = min(ep_ret, worst_case)
             logger.store(RandomEpRet=ep_ret, RandomEpLen=ep_len)
+
+    def test_agent_adversarial_noise():
+        def adv_step(o):
+            tens_o = torch.as_tensor(o, device=DEVICE)
+            def v(obs):
+                action = ac.pi(obs, deterministic=True, with_logprob=False)[0]
+                return ac.q1(tens_o, action) 
+            # v = lambda obs: ac.q1(tens_o, ac.pi(obs, deterministic=True, with_logprob=False))
+                #Value of policy given perturbed observation
+            adv_obs = state_gradient(v, tens_o, epsilon=2e-2) 
+                #Bounded adversarial perturbation to observation
+            return adv_obs.numpy()
+        for j in range(num_test_episodes):
+            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            o = adv_step(o)
+            # o += np.random.normal(1, .01, o.shape)
+            while not(d or (ep_len == max_ep_len)):
+                # Take deterministic actions at test time 
+                o, r, d, _ = test_env.step(get_action(o, True))
+                o = adv_step(o)
+                # o += np.random.normal(1, .01, o.shape)
+                ep_ret += r
+                ep_len += 1
+            logger.store(AdvEpRet=ep_ret, AdvEpLen=ep_len)
+            # worst_case = min(ep_ret, worst_case)
         # logger.store(WorstRandomEpRet=worst_case)
 
     # Prepare for interaction with environment
@@ -374,19 +410,20 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             test_agent()
             test_agent_transfer()
             test_agent_random()
+            test_agent_adversarial_noise()
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
             logger.log_tabular('EpRet', with_min_and_max=True)
             logger.log_tabular('TestEpRet', with_min_and_max=True)
             logger.log_tabular('TransferEpRet', with_min_and_max=True)
-            # logger.log_tabular('WorstTransferEpRet', with_min_and_max=True)
             logger.log_tabular('RandomEpRet', with_min_and_max=True)
-            # logger.log_tabular('WorstRandomEpRet', with_min_and_max=True)
+            logger.log_tabular('AdvEpRet', with_min_and_max=True)
             logger.log_tabular('EpLen', average_only=True)
             logger.log_tabular('TestEpLen', average_only=True)
             logger.log_tabular('TransferEpLen', average_only=True)
             logger.log_tabular('RandomEpLen', average_only=True)
+            logger.log_tabular('AdvEpLen', average_only=True)
             logger.log_tabular('TotalEnvInteracts', t)
             logger.log_tabular('Q1Vals', with_min_and_max=True)
             logger.log_tabular('Q2Vals', with_min_and_max=True)
