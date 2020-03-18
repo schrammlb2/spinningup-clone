@@ -6,6 +6,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
 
+#CUDA = torch.cuda.is_available()
+#if CUDA:  
+#    gpu_count = torch.cuda.device_count()
+#    import random
+#    DEVICE = torch.device(random.randint(gpu_count)) #Randomly assign to one of the GPUs
+#else:
+#    DEVICE = torch.device('cpu')
+
 
 def combined_shape(length, shape=None):
     if shape is None:
@@ -74,7 +82,9 @@ class MLPQFunction(nn.Module):
         self.q = mlp([obs_dim + act_dim] + list(hidden_sizes) + [1], activation)
 
     def forward(self, obs, act):
-        q = self.q(torch.cat([obs, act], dim=-1))
+        c = torch.cat([obs,act], dim=-1)
+        #dev=torch.cuda.device_of(c)
+        q = self.q(c)
         return torch.squeeze(q, -1) # Critical to ensure q has right shape.
 
 class MLPActorCritic(nn.Module):
@@ -95,4 +105,4 @@ class MLPActorCritic(nn.Module):
     def act(self, obs, deterministic=False):
         with torch.no_grad():
             a, _ = self.pi(obs, deterministic, False)
-            return a.numpy()
+            return a.cpu().numpy()

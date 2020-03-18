@@ -15,7 +15,7 @@ CUDA = torch.cuda.is_available()
 if CUDA:  
     gpu_count = torch.cuda.device_count()
     import random
-    DEVICE = torch.device(random.randint(gpu_count)) #Randomly assign to one of the GPUs
+    DEVICE = torch.device(random.randint(0,gpu_count-1)) #Randomly assign to one of the GPUs
 else:
     DEVICE = torch.device('cpu')
 # , device=DEVICE
@@ -50,7 +50,7 @@ class ReplayBuffer:
                      act=self.act_buf[idxs],
                      rew=self.rew_buf[idxs],
                      done=self.done_buf[idxs])
-        return {k: torch.as_tensor(v, dtype=torch.float32) for k,v in batch.items()}
+        return {k: torch.as_tensor(v, dtype=torch.float32, device=DEVICE) for k,v in batch.items()}
 
 
 
@@ -221,8 +221,8 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         loss_q = loss_q1 + loss_q2
 
         # Useful info for logging
-        q_info = dict(Q1Vals=q1.detach().numpy(),
-                      Q2Vals=q2.detach().numpy())
+        q_info = dict(Q1Vals=q1.cpu().detach().numpy(),
+                      Q2Vals=q2.cpu().detach().numpy())
 
         return loss_q, q_info
 
@@ -238,7 +238,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         loss_pi = (alpha * logp_pi - q_pi).mean()
 
         # Useful info for logging
-        pi_info = dict(LogPi=logp_pi.detach().numpy())
+        pi_info = dict(LogPi=logp_pi.cpu().detach().numpy())
 
         return loss_pi, pi_info
 
@@ -338,7 +338,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 #Value of policy given perturbed observation
             adv_obs = state_gradient(v, tens_o, epsilon=2e-2) 
                 #Bounded adversarial perturbation to observation
-            return adv_obs.numpy()
+            return adv_obs.cpu().numpy()
         for j in range(num_test_episodes):
             o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
             o = adv_step(o)
