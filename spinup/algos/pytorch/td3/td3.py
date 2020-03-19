@@ -7,6 +7,17 @@ import gym
 import time
 import spinup.algos.pytorch.td3.core as core
 from spinup.utils.logx import EpochLogger
+from spinup.utils.gradient_penalty import *
+
+import pybulletgym
+
+CUDA = torch.cuda.is_available()
+if CUDA:  
+    gpu_count = torch.cuda.device_count()
+    import random
+    DEVICE = torch.device(random.randint(0,gpu_count-1)) #Randomly assign to one of the GPUs
+else:
+    DEVICE = torch.device('cpu')
 
 
 class ReplayBuffer:
@@ -47,7 +58,7 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         polyak=0.995, pi_lr=1e-3, q_lr=1e-3, batch_size=100, start_steps=10000, 
         update_after=1000, update_every=50, act_noise=0.1, target_noise=0.2, 
         noise_clip=0.5, policy_delay=2, num_test_episodes=10, max_ep_len=1000, 
-        logger_kwargs=dict(), save_freq=1):
+        logger_kwargs=dict(), save_freq=1, use_grad_penalty=True, penalty_scale=.025):
     """
     Twin Delayed Deep Deterministic Policy Gradient (TD3)
 
@@ -160,8 +171,8 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     act_limit = env.action_space.high[0]
 
     # Create actor-critic module and target networks
-    ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
-    ac_targ = deepcopy(ac)
+    ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs).to(device=DEVICE)
+    ac_targ = deepcopy(ac).to(device=DEVICE)
 
     # Freeze target networks with respect to optimizers (only update via polyak averaging)
     for p in ac_targ.parameters():
@@ -185,7 +196,7 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q2 = ac.q2(o,a)
 
         # Bellman backup for Q functions
-        with torch.no_grad():
+        if use_grad_penalty:
             pi_targ = ac_targ.pi(o2)
 
             # Target policy smoothing
@@ -195,10 +206,26 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             a2 = torch.clamp(a2, -act_limit, act_limit)
 
             # Target Q-values
-            q1_pi_targ = ac_targ.q1(o2, a2)
-            q2_pi_targ = ac_targ.q2(o2, a2)
+            q1_pi_targ = gradient_penalty(ac_targ.q1, o2, a2, epsilon=penalty_scale)
+            q2_pi_targ = gradient_penalty(ac_targ.q2, o2, a2, epsilon=penalty_scale)
             q_pi_targ = torch.min(q1_pi_targ, q2_pi_targ)
             backup = r + gamma * (1 - d) * q_pi_targ
+
+        else:
+            with torch.no_grad():
+                pi_targ = ac_targ.pi(o2)
+
+                # Target policy smoothing
+                epsilon = torch.randn_like(pi_targ) * target_noise
+                epsilon = torch.clamp(epsilon, -noise_clip, noise_clip)
+                a2 = pi_targ + epsilon
+                a2 = torch.clamp(a2, -act_limit, act_limit)
+
+                # Target Q-values
+                q1_pi_targ = ac_targ.q1(o2, a2)
+                q2_pi_targ = ac_targ.q2(o2, a2)
+                q_pi_targ = torch.min(q1_pi_targ, q2_pi_targ)
+                backup = r + gamma * (1 - d) * q_pi_targ
 
         # MSE loss against Bellman backup
         loss_q1 = ((q1 - backup)**2).mean()
@@ -272,11 +299,61 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         for j in range(num_test_episodes):
             o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
             while not(d or (ep_len == max_ep_len)):
-                # Take deterministic actions at test time (noise_scale=0)
-                o, r, d, _ = test_env.step(get_action(o, 0))
+                # Take deterministic actions at test time 
+                o, r, d, _ = test_env.step(get_action(o, True))
                 ep_ret += r
                 ep_len += 1
             logger.store(TestEpRet=ep_ret, TestEpLen=ep_len)
+
+    def test_agent_transfer():
+        worst_case = np.inf
+        for j in range(num_test_episodes):
+            test_env = env_fn(transfer=True)
+            # test_env = env_fn()
+            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            while not(d or (ep_len == max_ep_len)):
+                # Take deterministic actions at test time 
+                o, r, d, _ = test_env.step(get_action(o, True))
+                ep_ret += r
+                ep_len += 1
+            worst_case = min(ep_ret, worst_case)
+            logger.store(TransferEpRet=ep_ret, TransferEpLen=ep_len)
+        # logger.store(WorstTransferEpRet=worst_case)
+
+    def test_agent_random():
+        worst_case = np.inf
+        for j in range(num_test_episodes):
+            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            o += np.random.normal(1, .01, o.shape)
+            while not(d or (ep_len == max_ep_len)):
+                # Take deterministic actions at test time 
+                o, r, d, _ = test_env.step(get_action(o, True))
+                o += np.random.normal(1, .01, o.shape)
+                ep_ret += r
+                ep_len += 1
+            worst_case = min(ep_ret, worst_case)
+            logger.store(RandomEpRet=ep_ret, RandomEpLen=ep_len)
+
+    def test_agent_adversarial_noise():
+        def adv_step(o):
+            tens_o = torch.as_tensor(o, device=DEVICE)
+            v = lambda obs: ac.q1(tens_o, ac.pi(obs)) 
+                #Value of policy given perturbed observation
+            adv_obs = state_gradient(v, tens_o, epsilon=2e-2) 
+                #Bounded adversarial perturbation to observation
+            return adv_obs.cpu().numpy()
+        for j in range(num_test_episodes):
+            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            o = adv_step(o)
+            # o += np.random.normal(1, .01, o.shape)
+            while not(d or (ep_len == max_ep_len)):
+                # Take deterministic actions at test time 
+                o, r, d, _ = test_env.step(get_action(o, True))
+                o = adv_step(o)
+                # o += np.random.normal(1, .01, o.shape)
+                ep_ret += r
+                ep_len += 1
+            logger.store(AdvEpRet=ep_ret, AdvEpLen=ep_len)
 
     # Prepare for interaction with environment
     total_steps = steps_per_epoch * epochs
@@ -332,13 +409,22 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
             # Test the performance of the deterministic version of the agent.
             test_agent()
+            test_agent_transfer()
+            test_agent_random()
+            test_agent_adversarial_noise()
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
             logger.log_tabular('EpRet', with_min_and_max=True)
             logger.log_tabular('TestEpRet', with_min_and_max=True)
+            logger.log_tabular('TransferEpRet', with_min_and_max=True)
+            logger.log_tabular('RandomEpRet', with_min_and_max=True)
+            logger.log_tabular('AdvEpRet', with_min_and_max=True)
             logger.log_tabular('EpLen', average_only=True)
             logger.log_tabular('TestEpLen', average_only=True)
+            logger.log_tabular('TransferEpLen', average_only=True)
+            logger.log_tabular('RandomEpLen', average_only=True)
+            logger.log_tabular('AdvEpLen', average_only=True)
             logger.log_tabular('TotalEnvInteracts', t)
             logger.log_tabular('Q1Vals', with_min_and_max=True)
             logger.log_tabular('Q2Vals', with_min_and_max=True)

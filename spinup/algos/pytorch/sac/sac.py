@@ -58,7 +58,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
         update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000, 
-        logger_kwargs=dict(), save_freq=1, use_grad_penalty=True, epsilon=.025):
+        logger_kwargs=dict(), save_freq=1, use_grad_penalty=True, penalty_scale=.025):
     """
     Soft Actor-Critic (SAC)
 
@@ -198,8 +198,8 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         if use_grad_penalty:
             a2, logp_a2 = ac.pi(o2)
 
-            q1_pi_targ = gradient_penalty(ac_targ.q1, o2, a2, epsilon=epsilon)
-            q2_pi_targ = gradient_penalty(ac_targ.q2, o2, a2, epsilon=epsilon)
+            q1_pi_targ = gradient_penalty(ac_targ.q1, o2, a2, epsilon=penalty_scale)
+            q2_pi_targ = gradient_penalty(ac_targ.q2, o2, a2, epsilon=penalty_scale)
 
             q_pi_targ = torch.min(q1_pi_targ, q2_pi_targ)
             backup = r + gamma * (1 - d) * (q_pi_targ - alpha * logp_a2)
@@ -234,8 +234,14 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q2_pi = ac.q2(o, pi)
         q_pi = torch.min(q1_pi, q2_pi)
 
+        log_min = -87.3+10
+            #Approximation of the lowest number log(x) where 1/x is representable in float32
+            # Clip to prevent NaN errors. 
+            # Approximate largest value is -87.3, leave some room just in case
+        clamped_log_pi = torch.clamp(logp_pi, log_min, -log_min)
+
         # Entropy-regularized policy loss
-        loss_pi = (alpha * logp_pi - q_pi).mean()
+        loss_pi = (alpha * clamped_logp_pi - q_pi).mean()
 
         # Useful info for logging
         pi_info = dict(LogPi=logp_pi.cpu().detach().numpy())

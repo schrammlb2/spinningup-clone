@@ -49,6 +49,7 @@ def gradient_penalty(critic, state, action=None, epsilon = 1e-4):
     grads = state_copy.grad.view(state.shape[0], -1)
     grad_norms = torch.sum(grads**2, dim=1)**.5
     grad_norms = grad_norms.view_as(new_values)
+    # pdb.set_trace()
     grad_penalty = epsilon*grad_norms
     if action is not None:
         grads = action_copy.grad.view(action.shape[0], -1)
