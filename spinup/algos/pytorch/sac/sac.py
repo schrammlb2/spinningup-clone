@@ -15,7 +15,9 @@ CUDA = torch.cuda.is_available()
 if CUDA:  
     gpu_count = torch.cuda.device_count()
     import random
-    DEVICE = torch.device(random.randint(0,gpu_count-1)) #Randomly assign to one of the GPUs
+    gpu_num = random.randint(0,gpu_count-1)
+    print("GPU num: " + str(gpu_num))
+    DEVICE = torch.device(gpu_num) #Randomly assign to one of the GPUs
 else:
     DEVICE = torch.device('cpu')
 # , device=DEVICE
@@ -238,7 +240,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             #Approximation of the lowest number log(x) where 1/x is representable in float32
             # Clip to prevent NaN errors. 
             # Approximate largest value is -87.3, leave some room just in case
-        clamped_log_pi = torch.clamp(logp_pi, log_min, -log_min)
+        clamped_logp_pi = torch.clamp(logp_pi, log_min, -log_min)
 
         # Entropy-regularized policy loss
         loss_pi = (alpha * clamped_logp_pi - q_pi).mean()

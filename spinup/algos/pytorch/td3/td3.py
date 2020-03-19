@@ -49,7 +49,7 @@ class ReplayBuffer:
                      act=self.act_buf[idxs],
                      rew=self.rew_buf[idxs],
                      done=self.done_buf[idxs])
-        return {k: torch.as_tensor(v, dtype=torch.float32) for k,v in batch.items()}
+        return {k: torch.as_tensor(v, dtype=torch.float32, device=DEVICE) for k,v in batch.items()}
 
 
 
@@ -233,8 +233,8 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         loss_q = loss_q1 + loss_q2
 
         # Useful info for logging
-        loss_info = dict(Q1Vals=q1.detach().numpy(),
-                         Q2Vals=q2.detach().numpy())
+        loss_info = dict(Q1Vals=q1.cpu().detach().numpy(),
+                         Q2Vals=q2.cpu().detach().numpy())
 
         return loss_q, loss_info
 
