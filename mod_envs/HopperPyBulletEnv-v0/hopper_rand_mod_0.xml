@@ -2,8 +2,8 @@
 <mujoco model="hopper">
 	<compiler angle="degree" coordinate="global" inertiafromgeom="true"></compiler>
 	<default>
-		<joint armature="1" damping="0.9328819025803807" limited="true"></joint>
-		<geom conaffinity="1" condim="1" contype="1" margin="0.001" friction="0.7939809099959325 0.09767470142692801 0.09357354610331525" material="geom" rgba="0.8 0.6 .4 1" solimp=".8 .8 .01" solref=".02 1"></geom>
+		<joint armature="1" damping="1.079536162689673" limited="true"></joint>
+		<geom conaffinity="1" condim="1" contype="1" margin="0.001" friction="0.7432437051137941 0.09311804921319133 0.09742823837993793" material="geom" rgba="0.8 0.6 .4 1" solimp=".8 .8 .01" solref=".02 1"></geom>
 		<motor ctrllimited="true" ctrlrange="-.4 .4"></motor>
 	</default>
 	<option integrator="RK4" timestep="0.002"></option>
@@ -12,16 +12,16 @@
 			<joint armature="0" axis="1 0 0" damping="0.0" limited="false" name="ignore1" pos="0 0 0" stiffness="0.0" type="slide"></joint>
 			<joint armature="0" axis="0 0 1" damping="0.0" limited="false" name="ignore2" pos="0 0 0" ref="1.25" stiffness="0.0" type="slide"></joint>
 			<joint armature="0" axis="0 1 0" damping="0.0" limited="false" name="ignore3" pos="0 0 0" stiffness="0.0" type="hinge"></joint>
-			<geom fromto="0 0 1.45 0 0 1.05" name="torso_geom" size="0.05026014177179407" type="capsule"></geom>
+			<geom fromto="0 0 1.45 0 0 1.05" name="torso_geom" size="0.04850804321860738" type="capsule"></geom>
 			<body name="thigh">
 				<joint axis="0 -1 0" name="thigh_joint" pos="0 0 1.05" range="-150 0" type="hinge"></joint>
-				<geom fromto="0 0 1.05 0 0 0.6" name="thigh_geom" size="0.04715559493095982" type="capsule"></geom>
+				<geom fromto="0 0 1.05 0 0 0.6" name="thigh_geom" size="0.0500695986781498" type="capsule"></geom>
 				<body name="leg">
 					<joint axis="0 -1 0" name="leg_joint" pos="0 0 0.6" range="-150 0" type="hinge"></joint>
-					<geom fromto="0 0 0.6 0 0 0.1" name="leg_geom" size="0.03794073799405046" type="capsule"></geom>
+					<geom fromto="0 0 0.6 0 0 0.1" name="leg_geom" size="0.0415118002491225" type="capsule"></geom>
 					<body name="foot">
 						<joint axis="0 -1 0" name="foot_joint" pos="0 0 0.1" range="-45 45" type="hinge"></joint>
-						<geom fromto="-0.13 0 0.1 0.26 0 0.1" name="foot_geom" size="0.06576295682629867" type="capsule"></geom>
+						<geom fromto="-0.13 0 0.1 0.26 0 0.1" name="foot_geom" size="0.05970193718563839" type="capsule"></geom>
 					</body>
 				</body>
 			</body>
