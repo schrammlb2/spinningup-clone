@@ -179,6 +179,8 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     for p in ac_targ.parameters():
         p.requires_grad = False
 
+
+    clip_val = 10 
     for p in ac.parameters():
         p.register_hook(lambda grad: torch.clamp(grad, -clip_val, clip_val))
         p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0.), grad)) 
