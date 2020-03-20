@@ -268,7 +268,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q_optimizer.zero_grad()
         loss_q, q_info = compute_loss_q(data)
         loss_q.backward()
-        torch.nn.utils.clip_grad_value_(q_params.parameters(), clip_val)
+        torch.nn.utils.clip_grad_value_(q_params, clip_val)
         q_optimizer.step()
 
         # Record things
@@ -410,15 +410,15 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
         # Update handling
         if t >= update_after and t % update_every == 0:
-            try: 
-                for j in range(update_every):
-                    batch = replay_buffer.sample_batch(batch_size)
-                    update(data=batch)
-                condition_list = [(p==p).all() for p in ac.parameters()]
-                assert condition_list == [True]*len(condition_list) 
-                    #Assert that updates haven't broken anythin
-            except: 
-                pass
+            # try: 
+            for j in range(update_every):
+                batch = replay_buffer.sample_batch(batch_size)
+                update(data=batch)
+            #     condition_list = [(p==p).all() for p in ac.parameters()]
+            #     assert condition_list == [True]*len(condition_list) 
+            #         #Assert that updates haven't broken anythin
+            # except: 
+            #     pass
         # End of epoch handling
         if (t+1) % steps_per_epoch == 0:
             epoch = (t+1) // steps_per_epoch

@@ -181,7 +181,7 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     clip_val = 10 
     for p in ac.parameters():
         p.register_hook(lambda grad: torch.clamp(grad, -clip_val, clip_val))
-        p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0., device=DEVICE), grad)) 
+        p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0.), grad)) 
 
     # List of parameters for both Q-networks (save this for convenience)
     q_params = itertools.chain(ac.q1.parameters(), ac.q2.parameters())
@@ -261,7 +261,7 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q_optimizer.zero_grad()
         loss_q, loss_info = compute_loss_q(data)
         loss_q.backward()
-        torch.nn.utils.clip_grad_value_(q_params.parameters(), clip_val)
+        torch.nn.utils.clip_grad_value_(q_params, clip_val)
         q_optimizer.step()
 
         # Record things
@@ -402,15 +402,9 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
         # Update handling
         if t >= update_after and t % update_every == 0:
-            try: 
-                for j in range(update_every):
-                    batch = replay_buffer.sample_batch(batch_size)
-                    update(data=batch)
-                condition_list = [(p==p).all() for p in ac.parameters()]
-                assert condition_list == [True]*len(condition_list) 
-                    #Assert that updates haven't broken anything
-            except: 
-                pass
+            for j in range(update_every):
+                batch = replay_buffer.sample_batch(batch_size)
+                update(data=batch, timer=j)
 
         # End of epoch handling
         if (t+1) % steps_per_epoch == 0:
