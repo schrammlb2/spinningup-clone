@@ -178,6 +178,10 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     # Freeze target networks with respect to optimizers (only update via polyak averaging)
     for p in ac_targ.parameters():
         p.requires_grad = False
+
+    for p in ac.parameters():
+        p.register_hook(lambda grad: torch.clamp(grad, -clip_val, clip_val))
+        p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0.), grad)) 
         
     # List of parameters for both Q-networks (save this for convenience)
     q_params = itertools.chain(ac.q1.parameters(), ac.q2.parameters())
@@ -262,6 +266,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q_optimizer.zero_grad()
         loss_q, q_info = compute_loss_q(data)
         loss_q.backward()
+        torch.nn.utils.clip_grad_value_(q_params.parameters(), clip_val)
         q_optimizer.step()
 
         # Record things
@@ -276,6 +281,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         pi_optimizer.zero_grad()
         loss_pi, pi_info = compute_loss_pi(data)
         loss_pi.backward()
+        torch.nn.utils.clip_grad_value_(ac.pi.parameters(), clip_val)
         pi_optimizer.step()
 
         # Unfreeze Q-networks so you can optimize it at next DDPG step.
@@ -402,10 +408,15 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
         # Update handling
         if t >= update_after and t % update_every == 0:
-            for j in range(update_every):
-                batch = replay_buffer.sample_batch(batch_size)
-                update(data=batch)
-
+            try: 
+                for j in range(update_every):
+                    batch = replay_buffer.sample_batch(batch_size)
+                    update(data=batch)
+                condition_list = [(p==p).all() for p in ac.parameters()]
+                assert condition_list == [True]*len(condition_list) 
+                    #Assert that updates haven't broken anythin
+            except: 
+                pass
         # End of epoch handling
         if (t+1) % steps_per_epoch == 0:
             epoch = (t+1) // steps_per_epoch
