@@ -181,7 +181,11 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     clip_val = 10 
     for p in ac.parameters():
         p.register_hook(lambda grad: torch.clamp(grad, -clip_val, clip_val))
+<<<<<<< HEAD
         p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0., device=DEVICE), grad)) 
+=======
+        p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0.,device=DEVICE), grad)) 
+>>>>>>> 07f78fa70e7f4747a735042de32d8b6b7fe6f760
 
     # List of parameters for both Q-networks (save this for convenience)
     q_params = itertools.chain(ac.q1.parameters(), ac.q2.parameters())
