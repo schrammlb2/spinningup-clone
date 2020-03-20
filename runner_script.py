@@ -14,7 +14,7 @@ envs = ["AntPyBulletEnv-v0", "HalfCheetahPyBulletEnv-v0", "HopperPyBulletEnv-v0"
 algs = ['sac', 'td3']
 grad_values = [True, False]
 alg = algs[0]
-env = envs[2]
+env = envs[0]
 for val in grad_values:
 	os.system(make_command(env, alg, val))
 	# print(make_command(env, alg, val))
