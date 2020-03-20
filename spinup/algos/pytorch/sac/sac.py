@@ -157,7 +157,6 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             the current policy and value function.
 
     """
-
     logger = EpochLogger(**logger_kwargs)
     logger.save_config(locals())
 
@@ -431,7 +430,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             test_agent()
             test_agent_transfer()
             test_agent_random()
-            test_agent_adversarial_noise()
+            # test_agent_adversarial_noise()
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
@@ -439,12 +438,12 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             logger.log_tabular('TestEpRet', with_min_and_max=True)
             logger.log_tabular('TransferEpRet', with_min_and_max=True)
             logger.log_tabular('RandomEpRet', with_min_and_max=True)
-            logger.log_tabular('AdvEpRet', with_min_and_max=True)
+            # logger.log_tabular('AdvEpRet', with_min_and_max=True)
             logger.log_tabular('EpLen', average_only=True)
             logger.log_tabular('TestEpLen', average_only=True)
             logger.log_tabular('TransferEpLen', average_only=True)
             logger.log_tabular('RandomEpLen', average_only=True)
-            logger.log_tabular('AdvEpLen', average_only=True)
+            # logger.log_tabular('AdvEpLen', average_only=True)
             logger.log_tabular('TotalEnvInteracts', t)
             logger.log_tabular('Q1Vals', with_min_and_max=True)
             logger.log_tabular('Q2Vals', with_min_and_max=True)

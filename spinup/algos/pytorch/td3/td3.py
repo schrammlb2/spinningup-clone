@@ -181,11 +181,7 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     clip_val = 10 
     for p in ac.parameters():
         p.register_hook(lambda grad: torch.clamp(grad, -clip_val, clip_val))
-<<<<<<< HEAD
         p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0., device=DEVICE), grad)) 
-=======
-        p.register_hook(lambda grad: torch.where(grad != grad, torch.tensor(0.,device=DEVICE), grad)) 
->>>>>>> 07f78fa70e7f4747a735042de32d8b6b7fe6f760
 
     # List of parameters for both Q-networks (save this for convenience)
     q_params = itertools.chain(ac.q1.parameters(), ac.q2.parameters())
@@ -304,6 +300,8 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     def get_action(o, noise_scale):
         a = ac.act(torch.as_tensor(o, dtype=torch.float32, device=DEVICE))
         a += noise_scale * np.random.randn(act_dim)
+        if not np.isfinite(a).all():
+            pdb.set_trace()
         return np.clip(a, -act_limit, act_limit)
 
     def test_agent():
@@ -422,7 +420,7 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             test_agent()
             test_agent_transfer()
             test_agent_random()
-            test_agent_adversarial_noise()
+            # test_agent_adversarial_noise()
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
@@ -430,12 +428,12 @@ def td3(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             logger.log_tabular('TestEpRet', with_min_and_max=True)
             logger.log_tabular('TransferEpRet', with_min_and_max=True)
             logger.log_tabular('RandomEpRet', with_min_and_max=True)
-            logger.log_tabular('AdvEpRet', with_min_and_max=True)
+            # logger.log_tabular('AdvEpRet', with_min_and_max=True)
             logger.log_tabular('EpLen', average_only=True)
             logger.log_tabular('TestEpLen', average_only=True)
             logger.log_tabular('TransferEpLen', average_only=True)
             logger.log_tabular('RandomEpLen', average_only=True)
-            logger.log_tabular('AdvEpLen', average_only=True)
+            # logger.log_tabular('AdvEpLen', average_only=True)
             logger.log_tabular('TotalEnvInteracts', t)
             logger.log_tabular('Q1Vals', with_min_and_max=True)
             logger.log_tabular('Q2Vals', with_min_and_max=True)
