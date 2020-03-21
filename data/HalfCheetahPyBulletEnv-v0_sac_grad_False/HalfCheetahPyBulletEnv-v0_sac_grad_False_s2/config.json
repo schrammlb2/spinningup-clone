@@ -8,15 +8,15 @@
     "exp_name":	"HalfCheetahPyBulletEnv-v0_sac_grad_False",
     "gamma":	0.99,
     "logger":	{
-        "<spinup.utils.logx.EpochLogger object at 0x7f8c458fde80>":	{
+        "<spinup.utils.logx.EpochLogger object at 0x7fb66cbc2e80>":	{
             "epoch_dict":	{},
             "exp_name":	"HalfCheetahPyBulletEnv-v0_sac_grad_False",
             "first_row":	true,
             "log_current_row":	{},
             "log_headers":	[],
-            "output_dir":	"/common/users/lbs105/spinningup-clone/data/HalfCheetahPyBulletEnv-v0_sac_grad_False/HalfCheetahPyBulletEnv-v0_sac_grad_False_s0",
+            "output_dir":	"/common/users/lbs105/spinningup-clone/data/HalfCheetahPyBulletEnv-v0_sac_grad_False/HalfCheetahPyBulletEnv-v0_sac_grad_False_s2",
             "output_file":	{
-                "<_io.TextIOWrapper name='/common/users/lbs105/spinningup-clone/data/HalfCheetahPyBulletEnv-v0_sac_grad_False/HalfCheetahPyBulletEnv-v0_sac_grad_False_s0/progress.txt' mode='w' encoding='UTF-8'>":	{
+                "<_io.TextIOWrapper name='/common/users/lbs105/spinningup-clone/data/HalfCheetahPyBulletEnv-v0_sac_grad_False/HalfCheetahPyBulletEnv-v0_sac_grad_False_s2/progress.txt' mode='w' encoding='UTF-8'>":	{
                     "mode":	"w"
                 }
             }
@@ -24,7 +24,7 @@
     },
     "logger_kwargs":	{
         "exp_name":	"HalfCheetahPyBulletEnv-v0_sac_grad_False",
-        "output_dir":	"/common/users/lbs105/spinningup-clone/data/HalfCheetahPyBulletEnv-v0_sac_grad_False/HalfCheetahPyBulletEnv-v0_sac_grad_False_s0"
+        "output_dir":	"/common/users/lbs105/spinningup-clone/data/HalfCheetahPyBulletEnv-v0_sac_grad_False/HalfCheetahPyBulletEnv-v0_sac_grad_False_s2"
     },
     "lr":	0.001,
     "max_ep_len":	1000,
@@ -33,7 +33,7 @@
     "polyak":	0.995,
     "replay_size":	1000000,
     "save_freq":	1,
-    "seed":	0,
+    "seed":	2,
     "start_steps":	10000,
     "steps_per_epoch":	4000,
     "update_after":	1000,
