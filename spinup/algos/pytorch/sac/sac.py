@@ -306,7 +306,11 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
     def test_agent():
         for j in range(num_test_episodes):
-            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            try: 
+                o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            except:
+                pdb.set_trace()
+
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
                 o, r, d, _ = test_env.step(get_action(o, True))
@@ -319,7 +323,10 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         for j in range(num_test_episodes):
             test_env = env_fn(transfer=True)
             # test_env = env_fn()
-            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            try: 
+                o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            except:
+                pdb.set_trace()
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
                 o, r, d, _ = test_env.step(get_action(o, True))
@@ -332,7 +339,10 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     def test_agent_random():
         worst_case = np.inf
         for j in range(num_test_episodes):
-            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            try: 
+                o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+            except:
+                pdb.set_trace()
             o += np.random.normal(0, .01, o.shape)
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
@@ -405,7 +415,10 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         # End of trajectory handling
         if d or (ep_len == max_ep_len):
             logger.store(EpRet=ep_ret, EpLen=ep_len)
-            o, ep_ret, ep_len = env.reset(), 0, 0
+            try: 
+                o, ep_ret, ep_len = env.reset(), 0, 0
+            except:
+                pdb.set_trace()
 
         # Update handling
         if t >= update_after and t % update_every == 0:

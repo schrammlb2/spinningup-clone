@@ -8,7 +8,7 @@
     "exp_name":	"HalfCheetahPyBulletEnv-v0_sac_grad_False",
     "gamma":	0.99,
     "logger":	{
-        "<spinup.utils.logx.EpochLogger object at 0x7fb66cbc2e80>":	{
+        "<spinup.utils.logx.EpochLogger object at 0x7f3a574afeb8>":	{
             "epoch_dict":	{},
             "exp_name":	"HalfCheetahPyBulletEnv-v0_sac_grad_False",
             "first_row":	true,

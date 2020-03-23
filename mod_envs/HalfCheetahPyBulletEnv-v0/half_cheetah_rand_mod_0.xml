@@ -2,8 +2,8 @@
 <mujoco model="cheetah">
 	<compiler angle="radian" coordinate="local" inertiafromgeom="true" settotalmass="14"></compiler>
 	<default>
-		<joint armature=".1" damping="0.010155367222620844" limited="true" solimplimit="0 .8 .03" solreflimit=".02 1" stiffness="8.442211966518068"></joint>
-		<geom conaffinity="0" condim="3" contype="1" friction="0.7590611994960843 0.09002748422082825 0.10596769825174726" rgba="0.8 0.6 .4 1" solimp="0.0 0.8 0.01" solref="0.02 1"></geom>
+		<joint armature=".1" damping="0.009147934214501252" limited="true" solimplimit="0 .8 .03" solreflimit=".02 1" stiffness="8.302241332931256"></joint>
+		<geom conaffinity="0" condim="3" contype="1" friction="0.7811024677598051 0.102734063311631 0.10814907361819837" rgba="0.8 0.6 .4 1" solimp="0.0 0.8 0.01" solref="0.02 1"></geom>
 		<motor ctrllimited="true" ctrlrange="-1 1"></motor>
 	</default>
 	<size nstack="300000" nuser_geom="1"></size>
@@ -13,30 +13,30 @@
 			<joint armature="0" axis="1 0 0" damping="0.0" limited="false" name="ignorex" pos="0 0 0" stiffness="0.0" type="slide"></joint>
 			<joint armature="0" axis="0 0 1" damping="0.0" limited="false" name="ignorez" pos="0 0 0" stiffness="0.0" type="slide"></joint>
 			<joint armature="0" axis="0 1 0" damping="0.0" limited="false" name="ignorey" pos="0 0 0" stiffness="0.0" type="hinge"></joint>
-			<geom fromto="-.5 0 0 .5 0 0" name="torso" size="0.04864450266696085" type="capsule"></geom>
-			<geom axisangle="0 1 0 .87" name="head" pos=".6 0 .1" size="0.04492935274634678 0.1499348821216244" type="capsule"></geom>
+			<geom fromto="-.5 0 0 .5 0 0" name="torso" size="0.041963591174562366" type="capsule"></geom>
+			<geom axisangle="0 1 0 .87" name="head" pos=".6 0 .1" size="0.04685905418588065 0.15011218964155515" type="capsule"></geom>
 			<body name="bthigh" pos="-.5 0 0">
-				<joint axis="0 1 0" damping="6.262886622910358" name="bthigh" pos="0 0 0" range="-.52 1.05" stiffness="261.8793797375831" type="hinge"></joint>
-				<geom axisangle="0 1 0 -3.8" name="bthigh" pos=".1 0 -.13" size="0.0480743248892097 0.15319005600609834" type="capsule"></geom>
+				<joint axis="0 1 0" damping="5.765772348259212" name="bthigh" pos="0 0 0" range="-.52 1.05" stiffness="246.940754360789" type="hinge"></joint>
+				<geom axisangle="0 1 0 -3.8" name="bthigh" pos=".1 0 -.13" size="0.049408039388087514 0.13932256793463652" type="capsule"></geom>
 				<body name="bshin" pos=".16 0 -.25">
-					<joint axis="0 1 0" damping="4.069375420062656" name="bshin" pos="0 0 0" range="-.785 .785" stiffness="177.15566299058938" type="hinge"></joint>
-					<geom axisangle="0 1 0 -2.03" name="bshin" pos="-.14 0 -.07" rgba="0.9 0.6 0.6 1" size="0.04844367794893795 0.1589940805182672" type="capsule"></geom>
+					<joint axis="0 1 0" damping="4.379050094142791" name="bshin" pos="0 0 0" range="-.785 .785" stiffness="185.34295155269658" type="hinge"></joint>
+					<geom axisangle="0 1 0 -2.03" name="bshin" pos="-.14 0 -.07" rgba="0.9 0.6 0.6 1" size="0.04235108661738252 0.1644844634674204" type="capsule"></geom>
 					<body name="bfoot" pos="-.28 0 -.14">
-						<joint axis="0 1 0" damping="2.8719572481119164" name="bfoot" pos="0 0 0" range="-.4 .785" stiffness="129.84061544594636" type="hinge"></joint>
-						<geom axisangle="0 1 0 -.27" name="bfoot" pos=".03 0 -.097" rgba="0.9 0.6 0.6 1" size="0.04865531205217916 0.09106512645833821" type="capsule"></geom>
+						<joint axis="0 1 0" damping="3.0059387519594782" name="bfoot" pos="0 0 0" range="-.4 .785" stiffness="108.16822447857685" type="hinge"></joint>
+						<geom axisangle="0 1 0 -.27" name="bfoot" pos=".03 0 -.097" rgba="0.9 0.6 0.6 1" size="0.04856588471992008 0.0846068730810594" type="capsule"></geom>
 						<inertial mass="10"></inertial>
 					</body>
 				</body>
 			</body>
 			<body name="fthigh" pos=".5 0 0">
-				<joint axis="0 1 0" damping="4.320678968481895" name="fthigh" pos="0 0 0" range="-1.5 0.8" stiffness="186.1981862163397" type="hinge"></joint>
-				<geom axisangle="0 1 0 .52" name="fthigh" pos="-.07 0 -.12" size="0.04508795911724416 0.1435140050909234" type="capsule"></geom>
+				<joint axis="0 1 0" damping="4.147252773110938" name="fthigh" pos="0 0 0" range="-1.5 0.8" stiffness="163.700458326285" type="hinge"></joint>
+				<geom axisangle="0 1 0 .52" name="fthigh" pos="-.07 0 -.12" size="0.04938726169992261 0.13008330662860784" type="capsule"></geom>
 				<body name="fshin" pos="-.14 0 -.24">
-					<joint axis="0 1 0" damping="2.9771444827280797" name="fshin" pos="0 0 0" range="-1.2 1.1" stiffness="109.31896274654814" type="hinge"></joint>
-					<geom axisangle="0 1 0 -.6" name="fshin" pos=".065 0 -.09" rgba="0.9 0.6 0.6 1" size="0.04184504712433469 0.11494829353625832" type="capsule"></geom>
+					<joint axis="0 1 0" damping="2.7510407454871904" name="fshin" pos="0 0 0" range="-1.2 1.1" stiffness="111.64781855706693" type="hinge"></joint>
+					<geom axisangle="0 1 0 -.6" name="fshin" pos=".065 0 -.09" rgba="0.9 0.6 0.6 1" size="0.04289696161810349 0.10807143678637926" type="capsule"></geom>
 					<body name="ffoot" pos=".13 0 -.18">
-						<joint axis="0 1 0" damping="1.3866991962573787" name="ffoot" pos="0 0 0" range="-3.1 -0.3" stiffness="59.62901993651215" type="hinge"></joint>
-						<geom axisangle="0 1 0 -.6" name="ffoot" pos=".045 0 -.07" rgba="0.9 0.6 0.6 1" size="0.049959647759389374 0.07478739733510734" type="capsule"></geom>
+						<joint axis="0 1 0" damping="1.6175580388882551" name="ffoot" pos="0 0 0" range="-3.1 -0.3" stiffness="57.42118185398995" type="hinge"></joint>
+						<geom axisangle="0 1 0 -.6" name="ffoot" pos=".045 0 -.07" rgba="0.9 0.6 0.6 1" size="0.049950717293456334 0.0655256690396843" type="capsule"></geom>
 						<inertial mass="10"></inertial>
 					</body>
 				</body>

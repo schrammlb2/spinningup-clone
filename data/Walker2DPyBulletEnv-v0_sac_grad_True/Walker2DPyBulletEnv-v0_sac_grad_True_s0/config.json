@@ -8,7 +8,7 @@
     "exp_name":	"Walker2DPyBulletEnv-v0_sac_grad_True",
     "gamma":	0.99,
     "logger":	{
-        "<spinup.utils.logx.EpochLogger object at 0x7fd5418ebf60>":	{
+        "<spinup.utils.logx.EpochLogger object at 0x7ffac52fcf98>":	{
             "epoch_dict":	{},
             "exp_name":	"Walker2DPyBulletEnv-v0_sac_grad_True",
             "first_row":	true,

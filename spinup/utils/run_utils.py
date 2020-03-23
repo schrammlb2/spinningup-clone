@@ -187,17 +187,11 @@ def call_experiment(exp_name, thunk, seed=0, num_cpu=1, data_dir=None,
         subprocess.check_call(cmd, env=os.environ)
     except CalledProcessError:
         err_msg = '\n'*3 + '='*DIV_LINE_WIDTH + '\n' + dedent("""
-
             There appears to have been an error in your experiment.
-
-            Check the traceback above to see what actually went wrong. The 
-            traceback below, included for completeness (but probably not useful
-            for diagnosing the error), shows the stack leading up to the 
-            experiment launch.
-
             """) + '='*DIV_LINE_WIDTH + '\n'*3
         print(err_msg)
-        raise
+        exit()
+        #raise
 
     # Tell the user about where results are, and how to check them
     logger_kwargs = kwargs['logger_kwargs']

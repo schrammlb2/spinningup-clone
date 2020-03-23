@@ -8,7 +8,7 @@
     "exp_name":	"AntPyBulletEnv-v0_sac_grad_False",
     "gamma":	0.99,
     "logger":	{
-        "<spinup.utils.logx.EpochLogger object at 0x7f30537cdf60>":	{
+        "<spinup.utils.logx.EpochLogger object at 0x7f0b9da29fd0>":	{
             "epoch_dict":	{},
             "exp_name":	"AntPyBulletEnv-v0_sac_grad_False",
             "first_row":	true,
