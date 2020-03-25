@@ -324,17 +324,17 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             succeeded=False
             i=0
             while not succeeded:
-                # try: 
-                test_env = env_fn(transfer=True, scale=scale)
-                o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
-                clear_xml(test_env)
-                succeeded=True
+                try: 
+                    test_env = env_fn(transfer=True, scale=scale)
+                    o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+                    clear_xml(test_env)
+                    succeeded=True
                     #When parallelizing, sometimes different 
-                # except:
-                #     i+=1
-                #     if i > 10:
-                #         pdb.set_trace()
-                #     time.sleep(1)
+                except:
+                    i+=1
+                    if i > 10:
+                        pdb.set_trace()
+                    time.sleep(1)
 
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
