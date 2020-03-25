@@ -231,6 +231,9 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q_info = dict(Q1Vals=q1.cpu().detach().numpy(),
                       Q2Vals=q2.cpu().detach().numpy())
 
+        grad_norm = gradient_norm(ac.q1,o,a)
+        logger.store(GradNorm=grad_norm)
+
         return loss_q, q_info
 
     # Set up function for computing SAC pi loss
@@ -441,6 +444,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             # Test the performance of the deterministic version of the agent.
             # scales = [(i+1) for i in range(5)]
             test_agent()
+
             test_agent_transfer(scale=1*.1, log_lambda=lambda a, b: logger.store(Transfer1EpRet=a, Transfer1EpLen=b))
             test_agent_transfer(scale=3*.1, log_lambda=lambda a, b: logger.store(Transfer3EpRet=a, Transfer3EpLen=b))
             test_agent_transfer(scale=5*.1, log_lambda=lambda a, b: logger.store(Transfer5EpRet=a, Transfer5EpLen=b))
@@ -498,6 +502,9 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             logger.log_tabular('LogPi', with_min_and_max=True)
             logger.log_tabular('LossPi', average_only=True)
             logger.log_tabular('LossQ', average_only=True)
+
+            logger.log_tabular('GradNorm', with_min_and_max=True)
+
             logger.log_tabular('Time', time.time()-start_time)
             logger.dump_tabular()
 
