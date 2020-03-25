@@ -156,16 +156,16 @@ def call_experiment(exp_name, thunk, seed=0, num_cpu=1, data_dir=None,
             import gym
             import os
             env_name = kwargs['env_name']
-            def env_fn(transfer=False):
+            def env_fn(transfer=False, scale=.1):
                 if not transfer: 
                     return gym.make(env_name)
                 else:
                     path = os.getcwd() +"/mod_envs/" + env_name + "/"
                     filenames = [path + xml for xml in os.listdir(path) if xml.endswith('.xml')]
                     fn = sorted(filenames, key = lambda x: len(x))
-                    randomize_xml(fn[0])
-                    filenames = [path + xml for xml in os.listdir(path) if xml.endswith('.xml')]
-                    xml_file = sorted(filenames, key = lambda x: len(x))[-1]
+                    xml_file = randomize_xml(fn[0], scale=scale)
+                    # filenames = [path + xml for xml in os.listdir(path) if xml.endswith('.xml')]
+                    # xml_file = sorted(filenames, key = lambda x: len(x))[-1]
                     return gym.make(env_name, xml_file=xml_file)
 
             kwargs['env_fn'] = env_fn   #lambda : gym.make(env_name)

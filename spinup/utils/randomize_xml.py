@@ -3,6 +3,8 @@ import random
 import copy
 import pdb
 import collections
+import string
+import os
 
 fields_to_randomize = ['@friction', '@size', '@stiffness', '@damping']
 
@@ -37,14 +39,32 @@ def alter(item, scale):
 		return alter_dict(item, scale)
 
 
-def randomize_xml(base_xml_file, scale=.1 ,count = 1):
+# def randomize_xml(base_xml_file, scale=.1 ,count = 1):
+# 	with open(base_xml_file) as fd:
+# 		diction = xmltodict.parse(fd.read(), process_namespaces=True)
+
+# 	for i in range(count):
+# 		new_xml = xmltodict.unparse(alter(diction, scale), pretty=True)
+# 		with open(base_xml_file[:-4] + '_rand_mod_' + str(i) + '.xml', 'w+') as fd:
+# 			fd.write(new_xml)
+
+def randomize_xml(base_xml_file, scale=.1):
 	with open(base_xml_file) as fd:
 		diction = xmltodict.parse(fd.read(), process_namespaces=True)
 
-	for i in range(count):
-		new_xml = xmltodict.unparse(alter(diction, scale), pretty=True)
-		with open(base_xml_file[:-4] + '_rand_mod_' + str(i) + '.xml', 'w+') as fd:
-			fd.write(new_xml)
+	new_xml = xmltodict.unparse(alter(diction, scale), pretty=True)
+	code = "".join([random.choice(string.ascii_letters + string.digits) for n in range(4)])
+	filename = base_xml_file[:-4] + '_rand_mod_' + code + '.xml'
+	with open(filename, 'w+') as fd:
+		fd.write(new_xml)
+
+	return filename
+
+def clear_xml(env):
+	xml_file = env.env.robot.model_xml
+	if "rand_mod" in xml_file:
+		#Make sure we're not removing the base xml
+		os.remove(xml_file)
 
 # scale = .3
 # randomize_xml('./mod_envs/halfcheetah/halfcheetah.xml', count = 4, scale=scale)

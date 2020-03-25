@@ -8,7 +8,7 @@ import time
 import spinup.algos.pytorch.sac.core as core
 from spinup.utils.logx import EpochLogger
 from spinup.utils.gradient_penalty import *
-
+from spinup.utils.randomize_xml import clear_xml
 import pybulletgym
 
 CUDA = torch.cuda.is_available()
@@ -59,7 +59,7 @@ class ReplayBuffer:
 def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0, 
         steps_per_epoch=4000, epochs=250, replay_size=int(1e6), gamma=0.99, 
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000, 
-        update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000, 
+        update_after=1000, update_every=50, num_test_episodes=3, max_ep_len=1000, 
         logger_kwargs=dict(), save_freq=1, use_grad_penalty=True, penalty_scale=.025):
     """
     Soft Actor-Critic (SAC)
@@ -318,66 +318,70 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 ep_len += 1
             logger.store(TestEpRet=ep_ret, TestEpLen=ep_len)
 
-    def test_agent_transfer():
-        worst_case = np.inf
+    def test_agent_transfer(scale=.1, log_lambda=lambda a, b: logger.store(TransferEpRet=a, TransferEpLen=b)):
+        import time
         for j in range(num_test_episodes):
-            test_env = env_fn(transfer=True)
-            # test_env = env_fn()
-            try: 
+            succeeded=False
+            i=0
+            while not succeeded:
+                # try: 
+                test_env = env_fn(transfer=True, scale=scale)
                 o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
-            except:
-                pdb.set_trace()
+                clear_xml(test_env)
+                succeeded=True
+                    #When parallelizing, sometimes different 
+                # except:
+                #     i+=1
+                #     if i > 10:
+                #         pdb.set_trace()
+                #     time.sleep(1)
+
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
                 o, r, d, _ = test_env.step(get_action(o, True))
                 ep_ret += r
                 ep_len += 1
-            worst_case = min(ep_ret, worst_case)
-            logger.store(TransferEpRet=ep_ret, TransferEpLen=ep_len)
+            log_lambda(ep_ret, ep_len)
+            # logger.store(TransferEpRet=ep_ret, TransferEpLen=ep_len)
         # logger.store(WorstTransferEpRet=worst_case)
 
-    def test_agent_random():
-        worst_case = np.inf
+    def test_agent_random(scale=.1, log_lambda=lambda a, b: logger.store(RandomEpRet=a, RandomEpLen=b)):
         for j in range(num_test_episodes):
             try: 
                 o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
             except:
                 pdb.set_trace()
-            o += np.random.normal(0, .01, o.shape)
+            o += np.random.normal(0, scale, o.shape)
             while not(d or (ep_len == max_ep_len)):
                 # Take deterministic actions at test time 
                 o, r, d, _ = test_env.step(get_action(o, True))
-                o += np.random.normal(0, .01, o.shape)
+                o += np.random.normal(0, scale, o.shape)
                 ep_ret += r
                 ep_len += 1
-            worst_case = min(ep_ret, worst_case)
-            logger.store(RandomEpRet=ep_ret, RandomEpLen=ep_len)
 
-    def test_agent_adversarial_noise():
-        def adv_step(o):
-            tens_o = torch.as_tensor(o, device=DEVICE)
-            def v(obs):
-                action = ac.pi(obs, deterministic=True, with_logprob=False)[0]
-                return ac.q1(tens_o, action) 
-            # v = lambda obs: ac.q1(tens_o, ac.pi(obs, deterministic=True, with_logprob=False))
-                #Value of policy given perturbed observation
-            adv_obs = state_gradient(v, tens_o, epsilon=2e-2) 
-                #Bounded adversarial perturbation to observation
-            return adv_obs.cpu().numpy()
-        for j in range(num_test_episodes):
-            o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
-            o = adv_step(o)
-            # o += np.random.normal(1, .01, o.shape)
-            while not(d or (ep_len == max_ep_len)):
-                # Take deterministic actions at test time 
-                o, r, d, _ = test_env.step(get_action(o, True))
-                o = adv_step(o)
-                # o += np.random.normal(1, .01, o.shape)
-                ep_ret += r
-                ep_len += 1
-            logger.store(AdvEpRet=ep_ret, AdvEpLen=ep_len)
-            # worst_case = min(ep_ret, worst_case)
-        # logger.store(WorstRandomEpRet=worst_case)
+            log_lambda(ep_ret, ep_len)
+
+    # def test_agent_adversarial_noise():
+    #     def adv_step(o):
+    #         tens_o = torch.as_tensor(o, device=DEVICE)
+    #         def v(obs):
+    #             action = ac.pi(obs, deterministic=True, with_logprob=False)[0]
+    #             return ac.q1(tens_o, action) 
+    #         # v = lambda obs: ac.q1(tens_o, ac.pi(obs, deterministic=True, with_logprob=False))
+    #             #Value of policy given perturbed observation
+    #         adv_obs = state_gradient(v, tens_o, epsilon=2e-2) 
+    #             #Bounded adversarial perturbation to observation
+    #         return adv_obs.cpu().numpy()
+    #     for j in range(num_test_episodes):
+    #         o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
+    #         o = adv_step(o)
+    #         while not(d or (ep_len == max_ep_len)):
+    #             # Take deterministic actions at test time 
+    #             o, r, d, _ = test_env.step(get_action(o, True))
+    #             o = adv_step(o)
+    #             ep_ret += r
+    #             ep_len += 1
+    #         logger.store(AdvEpRet=ep_ret, AdvEpLen=ep_len)
 
     # Prepare for interaction with environment
     total_steps = steps_per_epoch * epochs
@@ -422,15 +426,10 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 
         # Update handling
         if t >= update_after and t % update_every == 0:
-            # try: 
             for j in range(update_every):
                 batch = replay_buffer.sample_batch(batch_size)
                 update(data=batch)
-            #     condition_list = [(p==p).all() for p in ac.parameters()]
-            #     assert condition_list == [True]*len(condition_list) 
-            #         #Assert that updates haven't broken anythin
-            # except: 
-            #     pass
+
         # End of epoch handling
         if (t+1) % steps_per_epoch == 0:
             epoch = (t+1) // steps_per_epoch
@@ -440,22 +439,58 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
                 logger.save_state({'env': env}, None)
 
             # Test the performance of the deterministic version of the agent.
+            # scales = [(i+1) for i in range(5)]
             test_agent()
-            test_agent_transfer()
-            test_agent_random()
+            test_agent_transfer(scale=1*.1, log_lambda=lambda a, b: logger.store(Transfer1EpRet=a, Transfer1EpLen=b))
+            test_agent_transfer(scale=3*.1, log_lambda=lambda a, b: logger.store(Transfer3EpRet=a, Transfer3EpLen=b))
+            test_agent_transfer(scale=5*.1, log_lambda=lambda a, b: logger.store(Transfer5EpRet=a, Transfer5EpLen=b))
+            test_agent_transfer(scale=7*.1, log_lambda=lambda a, b: logger.store(Transfer7EpRet=a, Transfer7EpLen=b))
+
+            test_agent_random(scale=1*.03, log_lambda=lambda a, b: logger.store(Random1EpRet=a, Random1EpLen=b))
+            test_agent_random(scale=3*.03, log_lambda=lambda a, b: logger.store(Random3EpRet=a, Random3EpLen=b))
+            test_agent_random(scale=5*.03, log_lambda=lambda a, b: logger.store(Random5EpRet=a, Random5EpLen=b))
+            test_agent_random(scale=7*.03, log_lambda=lambda a, b: logger.store(Random7EpRet=a, Random7EpLen=b))
+
+            # transfer_ep_ret_names = ['Transfer' + str(scale) + 'EpRet' for scale in scales]
+            # transfer_ep_len_names = ['Transfer' + str(scale) + 'EpLen' for scale in scales]
+            # # transfer_logger_lambda = [lambda ep_ret, ep_len: \
+            # #     logger.store(**{'Transfer' + str(scale) + 'EpRet': ep_ret, 'Transfer' + str(scale) + 'EpLen': ep_len}) \
+            # #     for scale in scales]
+            # transfer_logger_lambda = [lambda ep_ret, ep_len: \
+            #     logger.store(**{trans_ep_ret: ep_ret, trans_ep_len: ep_len}) \
+            #     for trans_ep_ret, trans_ep_len in zip(transfer_ep_ret_names, transfer_ep_len_names)]
+
+            # for scale, lam in zip(scales, transfer_logger_lambda):
+            #     test_agent_transfer(scale=scale*.1, log_lambda=lam)
+
+            # random_logger_lambda = [lambda ep_ret, ep_len: \
+            #     logger.store(**{'Random' + str(scale) + 'EpRet': ep_ret, 'Random' + str(scale) + 'EpLen': ep_len}) \
+            #     for scale in scales]
+
+            # for scale, lam in zip(scales, random_logger_lambda):
+            #     test_agent_random(scale=scale*.03, log_lambda=lam)
+
+            scales = [1,3,5,7]
+            ep_ret_names = [task + str(scale) + 'EpRet' for task in ['Transfer', 'Random'] for scale in scales]
+            ep_len_names = [task + str(scale) + 'EpLen' for task in ['Transfer', 'Random'] for scale in scales]
+
+            for ret in ep_ret_names:
+                logger.log_tabular(ret, with_min_and_max=True)
+            for length in ep_len_names:
+                logger.log_tabular(length, average_only=True)
             # test_agent_adversarial_noise()
 
             # Log info about epoch
             logger.log_tabular('Epoch', epoch)
             logger.log_tabular('EpRet', with_min_and_max=True)
-            logger.log_tabular('TestEpRet', with_min_and_max=True)
-            logger.log_tabular('TransferEpRet', with_min_and_max=True)
-            logger.log_tabular('RandomEpRet', with_min_and_max=True)
+            # logger.log_tabular('TestEpRet', with_min_and_max=True)
+            # logger.log_tabular('TransferEpRet', with_min_and_max=True)
+            # logger.log_tabular('RandomEpRet', with_min_and_max=True)
             # logger.log_tabular('AdvEpRet', with_min_and_max=True)
             logger.log_tabular('EpLen', average_only=True)
-            logger.log_tabular('TestEpLen', average_only=True)
-            logger.log_tabular('TransferEpLen', average_only=True)
-            logger.log_tabular('RandomEpLen', average_only=True)
+            # logger.log_tabular('TestEpLen', average_only=True)
+            # logger.log_tabular('TransferEpLen', average_only=True)
+            # logger.log_tabular('RandomEpLen', average_only=True)
             # logger.log_tabular('AdvEpLen', average_only=True)
             logger.log_tabular('TotalEnvInteracts', t)
             logger.log_tabular('Q1Vals', with_min_and_max=True)
