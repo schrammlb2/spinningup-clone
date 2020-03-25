@@ -231,8 +231,9 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
         q_info = dict(Q1Vals=q1.cpu().detach().numpy(),
                       Q2Vals=q2.cpu().detach().numpy())
 
-        grad_norm = gradient_norm(ac.q1,o,a)
-        logger.store(GradNorm=grad_norm)
+        state_grad_norm, action_grad_norm = gradient_norm(ac.q1,o,a)
+        logger.store(StateGradNorm=state_grad_norm.cpu().detach().numpy())
+        logger.store(ActionGradNorm=action_grad_norm.cpu().detach().numpy())
 
         return loss_q, q_info
 
@@ -503,7 +504,8 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             logger.log_tabular('LossPi', average_only=True)
             logger.log_tabular('LossQ', average_only=True)
 
-            logger.log_tabular('GradNorm', with_min_and_max=True)
+            logger.log_tabular('StateGradNorm', with_min_and_max=True)
+            logger.log_tabular('ActionGradNorm', with_min_and_max=True)
 
             logger.log_tabular('Time', time.time()-start_time)
             logger.dump_tabular()
