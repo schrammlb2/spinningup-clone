@@ -8,7 +8,7 @@
     "exp_name":	"HopperPyBulletEnv-v0_sac_grad_True",
     "gamma":	0.99,
     "logger":	{
-        "<spinup.utils.logx.EpochLogger object at 0x7f7b50461ba8>":	{
+        "<spinup.utils.logx.EpochLogger object at 0x7f79f1b3cba8>":	{
             "epoch_dict":	{},
             "exp_name":	"HopperPyBulletEnv-v0_sac_grad_True",
             "first_row":	true,

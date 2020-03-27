@@ -311,6 +311,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
     def test_agent():
         for j in range(num_test_episodes):
             try: 
+                test_env = env_fn()
                 o, d, ep_ret, ep_len = test_env.reset(), False, 0, 0
             except:
                 pdb.set_trace()
